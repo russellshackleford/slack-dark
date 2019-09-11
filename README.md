@@ -1,18 +1,25 @@
-# Dark theme for the slack desktop app
+# Dark theme for the slack 4 linux desktop app
 
-## Add code to make slack download your custom CSS
+## Requirements
 
-Depending on your distribution, the path to `ssb-interop.js` might differ. Mine
-is in `/usr/lib/slack/resources/app.asar.unpacked/src/static/ssb-interop.js`.
-Once found, append the following to the file:
+- linux (send PR for Mac support)
+- slack-desktop
+- npm
+- npx (the script will install it if necessary)
+- asar (the script will install it if necessary)
 
-```js
-document.addEventListener('DOMContentLoaded', function() {
- $.ajax({
-   url: 'https://rawgit.com/russellshackleford/slack-dark/master/custom.css',
-   success: function(css) {
-     $("<style></style>").appendTo('head').html(css);
-   }
- });
-});
-```
+Tested only on ubuntu-18.04. The package name `npm` might differ on your
+platform. Install it by whatever name necessary.
+
+## Install
+
+Install slack first. If you haven't logged in for the first time, probably best
+that you do. I've had intermittent problems otherwise.
+
+Next, just run the script. It creates a working directory and uses `npm` to
+install `npx` and `asar` locally and then uses them to extract app.asar and then
+repack it after the javascript is added. It is fine to delete this working
+directory when done, but the next update of slack will require re-installing
+`npx` and `asar` so you might want to keep it around.
+
+[comment]: <> ( vim: set tw=80 ts=4 sw=4 sts=4 et: )
