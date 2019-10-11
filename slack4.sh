@@ -1,21 +1,31 @@
 #!/usr/bin/env bash
 
-wd="${HOME}/.__slack_theming"
-mkdir -p "$wd"
-pushd "$wd" &>/dev/null
+set -e
 
+basedir="$(readlink -e "$(dirname "$0")")"
+wd="${HOME}/.__slack_theming"
 bindir="${wd}/node_modules/.bin"
 PATH="${bindir}:${PATH}"
 
-if ! command -v npx &>/dev/null; then
-  npm i npx
+# Ensure slack is installed
+_version="$(dpkg -s slack-desktop |grep ^Version |awk '{print $2}')"
+if [ -z "$_version" ]; then
+  echo "Cannot determine slack version. Is it installed?"
+  exit 1
 fi
 
-if ! command -v asar &>/dev/null; then
-  npm i asar
-fi
+mkdir -p "$wd"
+# shellcheck source=install-tools.sh
+. "${basedir}/install-tools.sh"
 
-JS="
+pushd "$wd" &>/dev/null
+detect_os
+install_npm
+install_node
+install_npx
+install_asar
+
+js="
 // First make sure the wrapper app is loaded
 document.addEventListener('DOMContentLoaded', function() {
   // Fetch our CSS in parallel ahead of time
@@ -34,10 +44,17 @@ document.addEventListener('DOMContentLoaded', function() {
 resources="/usr/lib/slack/resources"
 jsfile="${resources}/app.asar.unpacked/dist/ssb-interop.bundle.js"
 
-echo "Adding Dark Theme Code to Slack... "
-
-sudo ${bindir}/npx asar extract ${resources}/app.asar{,.unpacked}
-sudo tee -a "${jsfile}" > /dev/null <<< "$JS"
-sudo ${bindir}/npx asar pack ${resources}/app.asar{.unpacked,}
+if [ ! -f "${resources}/dark-mode-${_version}-enabled" ]; then
+  echo -e "\\nAdding Dark Theme Code to Slack... "
+  sudo bash -c "export PATH=$PATH; \
+                npx asar extract \
+                  ${resources}/app.asar{,.unpacked}"
+  sudo tee -a "${jsfile}" > /dev/null <<< "$js"
+  sudo bash -c "export PATH=$PATH; \
+                npx asar pack ${resources}/app.asar{.unpacked,}"
+  sudo touch "${resources}/dark-mode-${_version}-enabled"
+else
+  echo -e "\\nIt appears you have already applied the dark theme"
+fi
 
 # vim: set ts=2 sw=2 sts=2 et:
