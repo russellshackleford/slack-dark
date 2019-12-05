@@ -1,3 +1,7 @@
+# THIS REPO IS ARCHIVED SINCE SLACK FINALLY ADDED IT'S OWN DARK MODE SUPPORT
+
+
+
 # Dark theme for the slack 4 linux desktop app
 
 ## Requirements
